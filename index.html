@@ -740,8 +740,24 @@ textarea.field{
 
 .profile-top{
     display:flex;
-    align-items:center;
-    gap:13px;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    min-width:0;
+}
+
+.profile-identity{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:9px;
+    min-width:0;
+    flex:1;
+}
+
+.profile-identity .profile-name{
+    max-width:100%;
+    overflow-wrap:anywhere;
 }
 
 .profile-avatar{
@@ -1838,6 +1854,49 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
  .journal-amount{min-width:80px;font-size:10px!important}
  .export-period-grid{grid-template-columns:1fr}
 }
+
+/* Profile header: avatar/name stacked with a dedicated add-account tile */
+.profile-add-account{
+    width:116px;
+    min-height:88px;
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:10px 8px;
+    border:1px dashed var(--border-strong);
+    border-radius:17px;
+    background:rgba(255,255,255,.025);
+    color:var(--text);
+    cursor:pointer;
+    transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.profile-add-account:active{transform:scale(.98)}
+.profile-add-icon{
+    width:36px;height:36px;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid var(--border-strong);
+    border-radius:12px;
+    background:var(--glass-strong);
+    color:var(--muted);
+    font-size:25px;
+    font-weight:400;
+    line-height:1;
+}
+.profile-add-label{font-size:10px;font-weight:650;text-align:center;line-height:1.25}
+.profile-avatar{cursor:pointer}
+.profile-avatar:focus-visible,.profile-add-account:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:520px){
+ .profile-top{gap:10px}
+ .profile-identity{gap:8px}
+ .profile-add-account{width:104px;min-height:82px;padding:8px 6px}
+ .profile-add-icon{width:34px;height:34px}
+ .profile-add-label{font-size:9px}
+ .profile-name{font-size:17px!important}
+}
+
 </style>
 </head>
 
@@ -2467,37 +2526,18 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 
                 <div class="profile-top">
 
-                    <div class="profile-avatar">
-
-                        <span id="profileAvatarText">
-                            П
-                        </span>
-
-                        <img
-                            id="profileAvatarImg"
-                            class="hidden"
-                        >
-
+                    <div class="profile-identity">
+                        <div class="profile-avatar" onclick="editProfile()" role="button" tabindex="0" aria-label="Изменить фото профиля">
+                            <span id="profileAvatarText">П</span>
+                            <img id="profileAvatarImg" class="hidden" alt="Фото профиля">
+                        </div>
+                        <div class="profile-name" id="profileName">—</div>
                     </div>
 
-
-                    <div>
-
-                        <div
-                            class="profile-name"
-                            id="profileName"
-                        >
-                            —
-                        </div>
-
-                        <div
-                            class="profile-date"
-                            id="profileDate"
-                        >
-                            —
-                        </div>
-
-                    </div>
+                    <button class="profile-add-account" id="profileAddAccount" type="button" onclick="createAccountFromApp()" aria-label="Добавить аккаунт">
+                        <span class="profile-add-icon">+</span>
+                        <span class="profile-add-label">Добавить аккаунт</span>
+                    </button>
 
                 </div>
 
@@ -5822,14 +5862,11 @@ function renderAccount(){
     );
 
 
-    setText(
-        "profileDate",
-        "Создан " +
-        formatFullDate(
-            account.createdAt
-        )
-    );
-
+    const addAccountButton = document.getElementById("profileAddAccount");
+    const accountCount = Object.keys(accounts || {}).length;
+    if(addAccountButton){
+        addAccountButton.classList.toggle("hidden", accountCount >= 2);
+    }
 
     const sales =
         products.reduce(
@@ -6175,27 +6212,11 @@ function createAccountFromApp(){
         return;
     }
 
-    const name = prompt("Название нового аккаунта:", `Аккаунт ${accountList.length + 1}`);
-
-    if(name === null) return;
-
-    const cleanName = String(name).trim();
-
-    if(!cleanName){
-        showToast("Название не может быть пустым");
-        return;
-    }
-
-    if(accountList.some(account => String(account.name).trim().toLowerCase() === cleanName.toLowerCase())){
-        showToast("Аккаунт с таким названием уже есть");
-        return;
-    }
-
     const id = "account_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
 
     accounts[id] = {
         id,
-        name: cleanName,
+        name: "Новый аккаунт",
         password: "",
         createdAt: localDateKey(),
         avatar: "",
@@ -6215,8 +6236,9 @@ function createAccountFromApp(){
     renderAccounts();
     closeAccountsModal();
     updateAll();
-    showPage("home");
-    showToast("Аккаунт создан");
+    showPage("account");
+    showToast("Аккаунт создан. Добавь имя и фото профиля.");
+    editProfile();
 }
 
 
