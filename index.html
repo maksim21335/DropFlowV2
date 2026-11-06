@@ -1875,18 +1875,61 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
     cursor:pointer;
     transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
-.profile-add-account:active{transform:scale(.94)}
+.profile-add-account:active{transform:scale(.97)}
 .profile-add-icon{
     display:flex;align-items:center;justify-content:center;
     font-size:27px;font-weight:400;line-height:1;
 }
 .profile-add-label{display:none}
+.profile-add-account.has-account{
+    width:88px;
+    height:auto;
+    min-height:0;
+    margin:0;
+    padding:0;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+    gap:9px;
+}
+.profile-switch-avatar{
+    width:65px;
+    height:65px;
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    border-radius:19px;
+    border:1px solid var(--border);
+    background:var(--glass-strong);
+    color:var(--text);
+    font-size:22px;
+    font-weight:700;
+}
+.profile-switch-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-switch-name{
+    max-width:88px;
+    color:var(--text);
+    font-size:13px;
+    font-weight:700;
+    line-height:1.25;
+    overflow-wrap:anywhere;
+    text-align:left;
+}
 .profile-avatar{cursor:pointer}
 .profile-avatar:focus-visible,.profile-add-account:focus-visible{outline:2px solid rgba(130,165,255,.8);outline-offset:3px}
 @media(max-width:520px){
  .profile-top{gap:10px}
  .profile-identity{gap:8px}
- .profile-add-account{width:42px;height:42px;min-height:42px;margin-top:9px;border-radius:13px}
+ .profile-add-account:not(.has-account){width:42px;height:42px;min-height:42px;margin-top:9px;border-radius:13px}
+ .profile-add-account.has-account{width:76px;gap:8px;margin-top:0}
+ .profile-switch-avatar{width:58px;height:58px;border-radius:16px;font-size:20px}
+ .profile-switch-name{max-width:76px;font-size:11px}
  .profile-name{font-size:17px!important}
 }
 
@@ -5861,7 +5904,29 @@ function renderAccount(){
 
 
     const addAccountButton = document.getElementById("profileAddAccount");
-    if(addAccountButton) addAccountButton.classList.remove("hidden");
+    if(addAccountButton){
+        const otherAccount = Object.values(accounts).find(item => item.id !== currentAccountId);
+        addAccountButton.classList.remove("hidden");
+        if(otherAccount){
+            const otherLetter = String(otherAccount.name || "?").trim().charAt(0).toUpperCase() || "?";
+            addAccountButton.classList.add("has-account");
+            addAccountButton.setAttribute("aria-label", "Переключиться на аккаунт " + otherAccount.name);
+            addAccountButton.onclick = () => switchAccount(otherAccount.id);
+            addAccountButton.innerHTML = `
+                <span class="profile-switch-avatar">
+                    ${otherAccount.avatar
+                        ? `<img src="${escapeHtml(otherAccount.avatar)}" alt="">`
+                        : `<span>${escapeHtml(otherLetter)}</span>`}
+                </span>
+                <span class="profile-switch-name">${escapeHtml(otherAccount.name || "Аккаунт")}</span>
+            `;
+        }else{
+            addAccountButton.classList.remove("has-account");
+            addAccountButton.setAttribute("aria-label", "Добавить аккаунт");
+            addAccountButton.onclick = createAccountFromApp;
+            addAccountButton.innerHTML = '<span class="profile-add-icon">+</span><span class="profile-add-label">Добавить аккаунт</span>';
+        }
+    }
 
     const sales =
         products.reduce(
