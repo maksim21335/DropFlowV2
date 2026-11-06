@@ -1795,6 +1795,49 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+/* V2.1 finance range, account switcher and journal alignment */
+.home-range-actions.home-range-picker{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0 18px;width:100%}
+.home-date-field{display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--muted);font-size:11px;font-weight:650}
+.home-date-input{width:100%;min-width:0;min-height:42px;padding:9px 10px}
+.home-chart-head{align-items:flex-start}
+.home-chart-head .home-reset-range{flex:none;min-height:38px}
+.home-range-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px}
+.home-range-summary>div{min-width:0;padding:11px 12px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.035)}
+.home-range-summary span{display:block;color:var(--muted);font-size:10px}
+.home-range-summary strong{display:block;margin-top:5px;font-size:13px;overflow-wrap:anywhere}
+.home-day-bar{min-width:16px}
+.account-management-setting{display:none!important}
+.account-switch-avatar{width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:13px;background:var(--glass-strong);border:1px solid var(--border);font-size:15px;font-weight:750}
+.account-switch-avatar img{width:100%;height:100%;object-fit:cover}
+.account-check{color:var(--muted);font-size:18px}
+.accounts-add-tile{width:100%;min-height:66px;display:flex;align-items:center;gap:12px;padding:11px 13px;text-align:left;border:1px dashed var(--border-strong);border-radius:15px;background:rgba(255,255,255,.025);color:var(--text)}
+.accounts-add-plus{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border-strong);border-radius:13px;background:var(--glass-strong);font-size:25px;font-weight:400;color:var(--muted)}
+.accounts-add-tile strong,.accounts-add-tile small{display:block}
+.accounts-add-tile strong{font-size:13px}
+.accounts-add-tile small{margin-top:3px;color:var(--muted);font-size:10px}
+.accounts-add-hint{margin-top:12px;color:var(--muted);font-size:11px;line-height:1.5;text-align:center}
+.journal-filters{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px!important;width:100%}
+.journal-filter{min-width:0!important;min-height:39px;padding:8px 5px!important;text-align:center!important;white-space:nowrap}
+.journal-row{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center!important;gap:12px!important}
+.journal-amount{min-width:92px}
+.export-period-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.export-period-grid .form-label{display:flex;flex-direction:column;gap:7px}
+.export-note{margin-top:14px;color:var(--muted);font-size:11px;line-height:1.55}
+@media(max-width:520px){
+ .home-range-actions.home-range-picker{gap:8px}
+ .home-date-input{max-width:none!important;font-size:12px}
+ .home-range-summary{gap:6px}
+ .home-range-summary>div{padding:9px 7px}
+ .home-range-summary strong{font-size:11px}
+ .home-chart-head{flex-wrap:wrap}
+ .home-chart-head .home-reset-range{width:100%}
+ .journal-filters{gap:5px!important}
+ .journal-filter{font-size:10px!important;padding:8px 3px!important}
+ .journal-row{gap:7px!important}
+ .journal-amount{min-width:80px;font-size:10px!important}
+ .export-period-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 
@@ -1865,7 +1908,9 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 
             <div
                 class="top-avatar"
-                onclick="showPage('account')"
+                onclick="showAccountsModal()"
+                title="Переключить аккаунт"
+                aria-label="Переключить аккаунт"
             >
                 <span id="topAvatarText">П</span>
                 <img
@@ -1970,18 +2015,29 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
             <div class="section home-trend-section">
                 <div class="home-chart-head">
                     <div>
-                        <div class="section-title">Прибыль за период</div>
-                        <div class="home-chart-caption" id="homeChartCaption">Последние 30 дней</div>
+                        <div class="section-title">Финансовый результат</div>
+                        <div class="home-chart-caption" id="homeChartCaption">Выберите период для анализа</div>
                     </div>
-                    <div class="home-range-actions">
-                        <label class="home-date-label" for="dashboardStartDate">Считать с</label>
-                        <input class="field home-date-input" type="date" id="dashboardStartDate" onchange="changeDashboardStartDate()">
-                        <button class="control home-reset-range" type="button" onclick="resetDashboardRange()">30 дней</button>
-                    </div>
+                    <button class="control home-reset-range" type="button" onclick="resetDashboardRange()">Последние 30 дней</button>
+                </div>
+                <div class="home-range-actions home-range-picker">
+                    <label class="home-date-field">
+                        <span>С даты</span>
+                        <input class="field home-date-input" type="date" id="dashboardStartDate" onchange="changeDashboardRange()">
+                    </label>
+                    <label class="home-date-field">
+                        <span>По дату</span>
+                        <input class="field home-date-input" type="date" id="dashboardEndDate" onchange="changeDashboardRange()">
+                    </label>
                 </div>
                 <div class="home-chart-total" id="homeChartTotal">0 ₽</div>
                 <div class="home-chart-scroll"><div id="homeProfitChart" class="home-profit-chart"></div></div>
-                <div class="home-chart-legend"><span><i></i> Чистая прибыль по дням</span><span id="homeChartRangeLabel">Последние 30 дней</span></div>
+                <div class="home-chart-legend"><span><i></i> Чистая прибыль</span><span id="homeChartRangeLabel">Последние 30 дней</span></div>
+                <div class="home-range-summary">
+                    <div><span>Продажи</span><strong id="homeRangeSales">0</strong></div>
+                    <div><span>Расходы</span><strong id="homeRangeExpenses">0 ₽</strong></div>
+                    <div><span>Выручка</span><strong id="homeRangeRevenue">0 ₽</strong></div>
+                </div>
             </div>
 
 
@@ -2558,7 +2614,7 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 
 
                     <div
-                        class="setting glass"
+                        class="setting glass account-management-setting"
                         onclick="createAccountFromApp()"
                     >
                         <div>
@@ -2578,7 +2634,7 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 
 
                     <div
-                        class="setting glass"
+                        class="setting glass account-management-setting"
                         onclick="showAccountsModal()"
                     >
                         <div>
@@ -3204,17 +3260,38 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
         ></div>
 
 
-        <button
-            class="primary-btn"
-            onclick="createAccountFromApp()"
-        >
-            Создать аккаунт
-        </button>
+        <div class="accounts-add-hint">Переключайся между рабочими профилями или добавь новый.</div>
 
     </div>
 
 </div>
 
+
+<!-- EXPORT PERIOD -->
+<div class="overlay" id="exportOverlay">
+    <div class="modal glass export-modal">
+        <div class="modal-head">
+            <div>
+                <div class="modal-title">Экспорт продаж</div>
+                <div class="top-subtitle">Выбери даты, за которые нужны данные</div>
+            </div>
+            <button class="close" type="button" onclick="closeExportModal()" aria-label="Закрыть">×</button>
+        </div>
+        <div class="export-period-grid">
+            <label class="form-label">С даты
+                <input class="field" type="date" id="exportStartDate">
+            </label>
+            <label class="form-label">По дату
+                <input class="field" type="date" id="exportEndDate">
+            </label>
+        </div>
+        <div class="export-note">В файл попадут только продажи выбранного периода, с датами, закупочной стоимостью, расходами и чистой прибылью.</div>
+        <div class="modal-actions">
+            <button class="modal-button cancel" type="button" onclick="closeExportModal()">Отмена</button>
+            <button class="modal-button save" type="button" onclick="downloadCSVExport()">Скачать CSV</button>
+        </div>
+    </div>
+</div>
 
 <!-- PROFILE -->
 
@@ -4144,56 +4221,111 @@ function renderJournal(){
    DASHBOARD
 ========================= */
 
+function dashboardRangeStorageKey(part){
+    return "dropflow_dashboard_" + part + "_v2_" + (currentAccountId || "default");
+}
+
 function getDashboardStartDate(){
-    const input = document.getElementById("dashboardStartDate");
-    const stored = localStorage.getItem("dropflow_dashboard_start_v2_" + (currentAccountId || "default"));
+    const stored = localStorage.getItem(dashboardRangeStorageKey("start"));
     if(stored && /^\d{4}-\d{2}-\d{2}$/.test(stored)) return stored;
-    const start = localDateKey(addDays(parseDateKey(localDateKey()), -29));
-    if(input) input.value = start;
-    return start;
+    return localDateKey(addDays(parseDateKey(localDateKey()), -29));
+}
+
+function getDashboardEndDate(){
+    const stored = localStorage.getItem(dashboardRangeStorageKey("end"));
+    if(stored && /^\d{4}-\d{2}-\d{2}$/.test(stored)) return stored;
+    return localDateKey();
+}
+
+function changeDashboardRange(){
+    const startInput = document.getElementById("dashboardStartDate");
+    const endInput = document.getElementById("dashboardEndDate");
+    if(!startInput?.value || !endInput?.value) return;
+    const today = localDateKey();
+    let start = startInput.value;
+    let end = endInput.value;
+    if(end > today){
+        end = today;
+        endInput.value = end;
+        showToast("Конечная дата не может быть в будущем");
+    }
+    if(start > today){
+        start = today;
+        startInput.value = start;
+        showToast("Начальная дата не может быть в будущем");
+    }
+    if(start > end){
+        showToast("Начальная дата не может быть позже конечной");
+        startInput.value = getDashboardStartDate();
+        endInput.value = getDashboardEndDate();
+        return;
+    }
+    localStorage.setItem(dashboardRangeStorageKey("start"), start);
+    localStorage.setItem(dashboardRangeStorageKey("end"), end);
+    updateDashboard();
 }
 
 function changeDashboardStartDate(){
-    const input = document.getElementById("dashboardStartDate");
-    if(!input || !input.value) return;
-    const today = localDateKey();
-    if(input.value > today){ input.value = today; showToast("Дата не может быть в будущем"); }
-    localStorage.setItem("dropflow_dashboard_start_v2_" + (currentAccountId || "default"), input.value);
-    updateDashboard();
+    changeDashboardRange();
 }
 
 function resetDashboardRange(){
-    localStorage.removeItem("dropflow_dashboard_start_v2_" + (currentAccountId || "default"));
-    const input = document.getElementById("dashboardStartDate");
-    if(input) input.value = localDateKey(addDays(parseDateKey(localDateKey()), -29));
+    localStorage.removeItem(dashboardRangeStorageKey("start"));
+    localStorage.removeItem(dashboardRangeStorageKey("end"));
+    const startInput = document.getElementById("dashboardStartDate");
+    const endInput = document.getElementById("dashboardEndDate");
+    if(startInput) startInput.value = getDashboardStartDate();
+    if(endInput) endInput.value = getDashboardEndDate();
     updateDashboard();
 }
 
-function getDashboardDailyData(startDate){
-    const today = parseDateKey(localDateKey());
+function getDashboardDailyData(startDate,endDate){
+    const todayKey = localDateKey();
+    const today = parseDateKey(todayKey);
     let start = parseDateKey(startDate || getDashboardStartDate());
+    let end = parseDateKey(endDate || getDashboardEndDate());
     if(!start || start > today) start = addDays(today, -29);
-    const result = [];
-    for(let day = new Date(start); day <= today; day = addDays(day, 1)){
-        const date = localDateKey(day);
-        let sales = 0, revenue = 0, expenses = 0, profit = 0;
-        products.forEach(product => {
-            (product.salesHistory || []).filter(s => s.date === date).forEach(sale => {
-                sales += 1;
-                const hasSnapshot = sale.sale != null && sale.purchase != null && sale.profit != null;
-                const salePrice = hasSnapshot ? parseNumber(sale.sale) : parseNumber(product.sale);
-                const purchase = hasSnapshot ? parseNumber(sale.purchase) : parseNumber(product.purchase);
-                const commission = hasSnapshot ? parseNumber(sale.commission) : getCommissionAmount(product);
-                const delivery = hasSnapshot ? parseNumber(sale.delivery) : parseNumber(product.delivery);
-                revenue += hasSnapshot && sale.revenue != null ? parseNumber(sale.revenue) : salePrice;
-                expenses += purchase;
-                profit += hasSnapshot ? parseNumber(sale.profit) : (salePrice - purchase - commission - delivery);
-            });
+    if(!end || end > today) end = today;
+    if(start > end) start = new Date(end);
+    const startKey = localDateKey(start), endKey = localDateKey(end);
+    const byDate = new Map();
+    const ensureDay = date => {
+        if(!byDate.has(date)) byDate.set(date,{date,sales:0,revenue:0,expenses:0,profit:0});
+        return byDate.get(date);
+    };
+
+    products.forEach(product=>{
+        (Array.isArray(product.salesHistory) ? product.salesHistory : []).forEach(sale=>{
+            const date = String(sale?.date || "");
+            if(date < startKey || date > endKey) return;
+            const hasSnapshot = sale.sale != null && sale.purchase != null;
+            const salePrice = hasSnapshot ? parseNumber(sale.sale) : parseNumber(product.sale);
+            const purchase = hasSnapshot ? parseNumber(sale.purchase) : parseNumber(product.purchase);
+            const commission = sale.commission != null ? parseNumber(sale.commission) : getCommissionAmount(product);
+            const delivery = sale.delivery != null ? parseNumber(sale.delivery) : parseNumber(product.delivery);
+            const saleProfit = sale.profit != null ? parseNumber(sale.profit) : salePrice - purchase - commission - delivery;
+            const day = ensureDay(date);
+            day.sales += 1;
+            day.revenue += sale.revenue != null ? parseNumber(sale.revenue) : salePrice;
+            day.expenses += purchase;
+            day.profit += saleProfit;
         });
-        const account = getCurrentAccount();
-        const extra = Array.isArray(account?.extraExpenses) ? account.extraExpenses.filter(item => item.date === date).reduce((sum,item) => sum + parseNumber(item.amount), 0) : 0;
-        expenses += extra; profit -= extra;
-        result.push({date, sales, revenue, expenses, profit});
+    });
+
+    const account = getCurrentAccount();
+    (Array.isArray(account?.extraExpenses) ? account.extraExpenses : []).forEach(item=>{
+        const date = String(item?.date || "");
+        if(date < startKey || date > endKey) return;
+        const amount = parseNumber(item.amount);
+        const day = ensureDay(date);
+        day.expenses += amount;
+        day.profit -= amount;
+    });
+
+    const result = [];
+    for(let day = new Date(start); day <= end; day = addDays(day,1)){
+        const date = localDateKey(day);
+        result.push(byDate.get(date) || {date,sales:0,revenue:0,expenses:0,profit:0});
     }
     return result;
 }
@@ -4201,18 +4333,35 @@ function getDashboardDailyData(startDate){
 function renderHomeProfitChart(data){
     const chart = document.getElementById("homeProfitChart");
     if(!chart) return;
-    const max = Math.max(1, ...data.map(d => Math.max(0, d.profit)));
-    chart.innerHTML = data.map((item,index) => {
-        const height = item.profit > 0 ? Math.max(3, item.profit / max * 118) : 2;
-        const date = item.date.slice(5).replace("-", ".");
-        const showDate = data.length <= 35 || index % Math.ceil(data.length / 30) === 0 || index === data.length - 1;
-        return `<div class="home-day-bar" title="${formatFullDate(item.date)} — ${money(item.profit)}"><div class="home-day-value">${item.profit ? money(item.profit) : "—"}</div><div class="home-day-column" style="height:${height}px;${item.profit < 0 ? "background:linear-gradient(to top,#ff777f,rgba(255,119,127,.25))" : ""}"></div><div class="home-day-date">${showDate ? date : ""}</div></div>`;
+    const total = data.reduce((sum,item)=>sum+item.profit,0);
+    const totalDays = data.length;
+    const bucketMode = totalDays > 365 ? "month" : totalDays > 90 ? "week" : "day";
+    const buckets = new Map();
+    data.forEach(item=>{
+        let key = item.date;
+        if(bucketMode === "month") key = item.date.slice(0,7) + "-01";
+        else if(bucketMode === "week"){
+            const d = parseDateKey(item.date);
+            const weekday = (d.getDay()+6)%7;
+            key = localDateKey(addDays(d,-weekday));
+        }
+        if(!buckets.has(key)) buckets.set(key,{date:key,profit:0});
+        buckets.get(key).profit += item.profit;
+    });
+    const points = Array.from(buckets.values());
+    const max = Math.max(1,...points.map(point=>Math.max(0,point.profit)));
+    chart.innerHTML = points.map((item,index)=>{
+        const height = item.profit > 0 ? Math.max(3,item.profit/max*118) : 2;
+        const date = bucketMode === "month" ? item.date.slice(0,7).split("-").reverse().join(".") : item.date.slice(5).replace("-",".");
+        const showDate = points.length <= 36 || index % Math.ceil(points.length/30) === 0 || index === points.length-1;
+        const periodName = bucketMode === "month" ? "Месяц" : bucketMode === "week" ? "Неделя с" : "Дата";
+        return `<div class="home-day-bar" title="${periodName} ${formatFullDate(item.date)} — ${money(item.profit)}"><div class="home-day-value">${item.profit ? money(item.profit) : "—"}</div><div class="home-day-column" style="height:${height}px;${item.profit < 0 ? "background:linear-gradient(to top,#ff777f,rgba(255,119,127,.25))" : ""}"></div><div class="home-day-date">${showDate ? date : ""}</div></div>`;
     }).join("");
-    const total = data.reduce((sum,item) => sum + item.profit, 0);
-    setText("homeChartTotal", money(total));
+    setText("homeChartTotal",money(total));
     const start = data[0]?.date, end = data[data.length-1]?.date;
-    setText("homeChartCaption", data.length === 30 ? "Последние 30 дней · обновляется ежедневно" : `${data.length} дн. · выбранный период`);
-    setText("homeChartRangeLabel", start && end ? `${start.split("-").reverse().join(".")} — ${end.split("-").reverse().join(".")}` : "Нет данных");
+    const modeLabel = bucketMode === "month" ? "по месяцам" : bucketMode === "week" ? "по неделям" : "по дням";
+    setText("homeChartCaption",`${totalDays} дн. · график ${modeLabel}`);
+    setText("homeChartRangeLabel",start && end ? `${start.split("-").reverse().join(".")} — ${end.split("-").reverse().join(".")}` : "Нет данных");
 }
 
 function updateIncomeGreeting(){
@@ -4235,9 +4384,12 @@ function updateIncomeGreeting(){
 function updateDashboard(){
     const today = localDateKey();
     const startDate = getDashboardStartDate();
-    const dateInput = document.getElementById("dashboardStartDate");
-    if(dateInput && dateInput.value !== startDate) dateInput.value = startDate;
-    const data = getDashboardDailyData(startDate);
+    const endDate = getDashboardEndDate();
+    const startInput = document.getElementById("dashboardStartDate");
+    const endInput = document.getElementById("dashboardEndDate");
+    if(startInput && startInput.value !== startDate) startInput.value = startDate;
+    if(endInput && endInput.value !== endDate) endInput.value = endDate;
+    const data = getDashboardDailyData(startDate,endDate);
     const sales = data.reduce((sum,item)=>sum+item.sales,0);
     const revenue = data.reduce((sum,item)=>sum+item.revenue,0);
     const expenses = data.reduce((sum,item)=>sum+item.expenses,0);
@@ -4252,6 +4404,9 @@ function updateDashboard(){
     setText("dashboardRevenue", money(revenue));
     setText("dashboardExpenses", money(expenses));
     setText("dashboardProducts", products.length);
+    setText("homeRangeSales", sales);
+    setText("homeRangeExpenses", money(expenses));
+    setText("homeRangeRevenue", money(revenue));
     renderHomeProfitChart(data);
     updateIncomeGreeting();
     renderFinancialGoal();
@@ -5684,14 +5839,10 @@ function renderAccount(){
         );
 
 
-    const profit =
-        products.reduce(
-            (sum,p)=>
-                sum +
-                getProfit(p) *
-                getSalesCount(p),
-            0
-        );
+    const realizedProfit = products.reduce((sum,p)=>sum + getRealizedProductProfit(p),0);
+    const allExtraExpenses = (Array.isArray(account.extraExpenses) ? account.extraExpenses : [])
+        .reduce((sum,item)=>sum + parseNumber(item.amount),0);
+    const profit = realizedProfit - allExtraExpenses;
 
 
     setText(
@@ -5972,39 +6123,23 @@ function renderAccounts(){
 
     container.innerHTML =
         list.map(account=>`
-
-            <div
-                class="account-item ${
-                    account.id === currentAccountId
-                        ? "current"
-                        : ""
-                }"
-                onclick="switchAccount('${account.id}')"
-            >
-
+            <div class="account-item ${account.id === currentAccountId ? "current" : ""}" onclick="switchAccount('${account.id}')">
+                <div class="account-switch-avatar">
+                    ${account.avatar ? `<img src="${escapeHtml(account.avatar)}" alt="">` : `<span>${escapeHtml(String(account.name || "?").charAt(0).toUpperCase())}</span>`}
+                </div>
                 <div class="account-info">
-
-                    <div class="account-name">
-                        ${escapeHtml(account.name)}
-                    </div>
-
-                    <div class="account-products">
-                        ${account.products?.length || 0} товаров
-                    </div>
-
+                    <div class="account-name">${escapeHtml(account.name)}</div>
+                    <div class="account-products">${account.products?.length || 0} товаров</div>
                 </div>
-
-                <div>
-                    ${
-                        account.id === currentAccountId
-                            ? "✓"
-                            : "›"
-                    }
-                </div>
-
+                <div class="account-check">${account.id === currentAccountId ? "✓" : "›"}</div>
             </div>
-
-        `).join("");
+        `).join("") +
+        (list.length < 2 ? `
+            <button class="accounts-add-tile" type="button" onclick="createAccountFromApp()">
+                <span class="accounts-add-plus">+</span>
+                <span><strong>Добавить аккаунт</strong><small>Создать отдельный профиль</small></span>
+            </button>
+        ` : "");
 }
 
 
@@ -6135,92 +6270,68 @@ function initTheme(){
 ========================= */
 
 function exportCSV(){
-
     if(!products.length){
-
-        showToast(
-            "Нет данных для экспорта"
-        );
-
+        showToast("Нет товаров для экспорта");
         return;
     }
+    const today = localDateKey();
+    document.getElementById("exportStartDate").value = localDateKey(addDays(parseDateKey(today),-29));
+    document.getElementById("exportEndDate").value = today;
+    document.getElementById("exportOverlay").classList.add("show");
+}
 
+function closeExportModal(){
+    document.getElementById("exportOverlay")?.classList.remove("show");
+}
 
+function downloadCSVExport(){
+    const start = document.getElementById("exportStartDate")?.value;
+    const end = document.getElementById("exportEndDate")?.value;
+    if(!start || !end){
+        showToast("Укажи обе даты");
+        return;
+    }
+    if(start > end){
+        showToast("Начальная дата не может быть позже конечной");
+        return;
+    }
+    const account = getCurrentAccount();
     const rows = [
-
-        [
-            "Товар",
-            "Закуп",
-            "Продажа",
-            "Чистая прибыль",
-            "Продаж"
-        ]
-
+        ["Аккаунт",account?.name || ""],
+        ["Период",`${start} — ${end}`],
+        [],
+        ["Дата продажи","Товар","Закуп","Продажа","Комиссия","Доставка","Чистая прибыль"]
     ];
-
-
+    let count = 0;
     products.forEach(product=>{
-
-        rows.push([
-
-            product.name,
-
-            product.purchase,
-
-            product.sale,
-
-            getProfit(product),
-
-            getSalesCount(product)
-
-        ]);
-
+        (Array.isArray(product.salesHistory) ? product.salesHistory : []).forEach(sale=>{
+            const date = String(sale?.date || "");
+            if(date < start || date > end) return;
+            const hasPurchase = sale.purchase != null;
+            const hasSale = sale.sale != null;
+            const purchase = hasPurchase ? parseNumber(sale.purchase) : parseNumber(product.purchase);
+            const salePrice = hasSale ? parseNumber(sale.sale) : parseNumber(product.sale);
+            const commission = sale.commission != null ? parseNumber(sale.commission) : getCommissionAmount(product);
+            const delivery = sale.delivery != null ? parseNumber(sale.delivery) : parseNumber(product.delivery);
+            const profit = sale.profit != null ? parseNumber(sale.profit) : salePrice - purchase - commission - delivery;
+            rows.push([date,product.name,purchase,salePrice,commission,delivery,profit]);
+            count++;
+        });
     });
-
-
-    const csv =
-        rows
-            .map(row =>
-                row
-                    .map(value =>
-                        `"${String(value)
-                            .replaceAll('"','""')}"`
-                    )
-                    .join(";")
-            )
-            .join("\n");
-
-
-    const blob =
-        new Blob(
-            ["\uFEFF" + csv],
-            {
-                type:"text/csv;charset=utf-8"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(blob);
-
-
-    const a =
-        document.createElement("a");
-
-
+    if(!count){
+        showToast("За выбранный период продаж нет");
+        return;
+    }
+    const csv = rows.map(row=>row.map(value=>`"${String(value ?? "").replaceAll('"','""')}"`).join(";")).join("\n");
+    const blob = new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
     a.href = url;
-
-    a.download =
-        `dropflow_${localDateKey()}.csv`;
-
+    a.download = `dropflow_sales_${start}_${end}.csv`;
     a.click();
-
-
-    URL.revokeObjectURL(url);
-
-    showToast(
-        "Экспорт готов"
-    );
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    closeExportModal();
+    showToast(`Экспортировано продаж: ${count}`);
 }
 
 
@@ -6696,6 +6807,7 @@ function showToast(message){
     ["historyOverlay",closeHistory],
     ["journalOverlay",closeJournal],
     ["accountsOverlay",closeAccountsModal],
+    ["exportOverlay",closeExportModal],
     ["profileOverlay",closeProfileModal]
 ].forEach(([id,fn])=>{
 
