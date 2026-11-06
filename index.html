@@ -1855,46 +1855,48 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
  .export-period-grid{grid-template-columns:1fr}
 }
 
-/* Profile header: avatar/name stacked with a dedicated add-account tile */
+/* Compact add-account control positioned beside the main profile avatar */
+.profile-top{justify-content:flex-start;align-items:flex-start;gap:12px}
+.profile-identity{flex:0 1 auto}
 .profile-add-account{
-    width:116px;
-    min-height:88px;
+    width:44px;
+    height:44px;
+    min-height:44px;
     flex:none;
     display:flex;
-    flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:7px;
-    padding:10px 8px;
-    border:1px dashed var(--border-strong);
-    border-radius:17px;
-    background:rgba(255,255,255,.025);
+    margin:10px 0 0 0;
+    padding:0;
+    border:1px solid var(--border-strong);
+    border-radius:14px;
+    background:var(--glass-strong);
     color:var(--text);
     cursor:pointer;
     transition:background .18s ease,border-color .18s ease,transform .18s ease;
 }
-.profile-add-account:active{transform:scale(.98)}
+.profile-add-account:active{transform:scale(.94)}
 .profile-add-icon{
-    width:36px;height:36px;
     display:flex;align-items:center;justify-content:center;
-    border:1px solid var(--border-strong);
-    border-radius:12px;
-    background:var(--glass-strong);
-    color:var(--muted);
-    font-size:25px;
-    font-weight:400;
-    line-height:1;
+    font-size:27px;font-weight:400;line-height:1;
 }
-.profile-add-label{font-size:10px;font-weight:650;text-align:center;line-height:1.25}
+.profile-add-label{display:none}
 .profile-avatar{cursor:pointer}
-.profile-avatar:focus-visible,.profile-add-account:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.profile-avatar:focus-visible,.profile-add-account:focus-visible{outline:2px solid rgba(130,165,255,.8);outline-offset:3px}
 @media(max-width:520px){
  .profile-top{gap:10px}
  .profile-identity{gap:8px}
- .profile-add-account{width:104px;min-height:82px;padding:8px 6px}
- .profile-add-icon{width:34px;height:34px}
- .profile-add-label{font-size:9px}
+ .profile-add-account{width:42px;height:42px;min-height:42px;margin-top:9px;border-radius:13px}
  .profile-name{font-size:17px!important}
+}
+
+/* Smooth page transitions for swipe navigation */
+.page.active.page-enter-left{animation:pageSlideFromRight .26s cubic-bezier(.22,.75,.25,1) both}
+.page.active.page-enter-right{animation:pageSlideFromLeft .26s cubic-bezier(.22,.75,.25,1) both}
+@keyframes pageSlideFromRight{from{opacity:.45;transform:translate3d(28px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes pageSlideFromLeft{from{opacity:.45;transform:translate3d(-28px,0,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:reduce){
+ .page.active.page-enter-left,.page.active.page-enter-right{animation:none}
 }
 
 </style>
@@ -1967,9 +1969,9 @@ html.theme-switching *,html.theme-switching *::before,html.theme-switching *::af
 
             <div
                 class="top-avatar"
-                onclick="showAccountsModal()"
-                title="Переключить аккаунт"
-                aria-label="Переключить аккаунт"
+                onclick="showPage('account')"
+                title="Открыть аккаунт"
+                aria-label="Открыть вкладку аккаунт"
             >
                 <span id="topAvatarText">П</span>
                 <img
@@ -4053,96 +4055,106 @@ document
    NAVIGATION
 ========================= */
 
-function showPage(page){
+function showPage(page,direction){
 
-    document
-        .querySelectorAll(".page")
-        .forEach(el =>
-            el.classList.remove("active")
-        );
+    const pageOrder = ["home","assortment","statistics","account"];
+    if(!pageOrder.includes(page)) return;
 
+    const previousPage = document.querySelector(".page.active");
+    const previousName = previousPage ? previousPage.id.replace("Page","") : page;
+    const previousIndex = pageOrder.indexOf(previousName);
+    const nextIndex = pageOrder.indexOf(page);
+    const movement = direction || (nextIndex >= previousIndex ? "left" : "right");
 
-    const target =
-        document.getElementById(
-            page + "Page"
-        );
+    document.querySelectorAll(".page").forEach(el=>{
+        el.classList.remove("active","page-enter-left","page-enter-right");
+    });
 
-
+    const target = document.getElementById(page + "Page");
     if(target){
-        target.classList.add("active");
+        target.classList.add("active",movement === "right" ? "page-enter-right" : "page-enter-left");
+        target.addEventListener("animationend",()=>{
+            target.classList.remove("page-enter-left","page-enter-right");
+        },{once:true});
     }
 
-
-    document
-        .querySelectorAll(".nav-button")
-        .forEach(button =>
-            button.classList.toggle(
-                "active",
-                button.dataset.page === page
-            )
-        );
-
+    document.querySelectorAll(".nav-button").forEach(button=>{
+        button.classList.toggle("active",button.dataset.page === page);
+    });
 
     const titles = {
-
-        home:[
-            "Главное",
-            "Обзор магазина"
-        ],
-
-        assortment:[
-            "Ассортимент",
-            "Твои товары"
-        ],
-
-        statistics:[
-            "Финансы",
-            "Продажи и прибыль"
-        ],
-
-        account:[
-            "Аккаунт",
-            "Профиль и настройки"
-        ]
-
+        home:["Главное","Обзор магазина"],
+        assortment:["Ассортимент","Твои товары"],
+        statistics:["Финансы","Продажи и прибыль"],
+        account:["Аккаунт","Профиль и настройки"]
     };
 
+    setText("topTitle",titles[page][0]);
+    setText("topSubtitle",titles[page][1]);
 
-    setText(
-        "topTitle",
-        titles[page][0]
-    );
-
-    setText(
-        "topSubtitle",
-        titles[page][1]
-    );
-
-
-    if(page === "home"){
-        updateDashboard();
-    }
-
-    if(page === "assortment"){
-        renderProducts();
-    }
-
+    if(page === "home") updateDashboard();
+    if(page === "assortment") renderProducts();
     if(page === "statistics"){
         renderStatistics();
         renderFinancialGoal();
     }
+    if(page === "account") renderAccount();
 
-    if(page === "account"){
-        renderAccount();
-    }
-
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
+    window.scrollTo({top:0,behavior:"smooth"});
 }
 
+/* Swipe/trackpad navigation between the four main tabs. */
+(function initSwipeNavigation(){
+    const app = document.getElementById("app");
+    if(!app) return;
+
+    const order = ["home","assortment","statistics","account"];
+    let touchStart = null;
+    let lastNavigationAt = 0;
+
+    const blocked = "input,textarea,select,button,a,.filters,.stats-controls,.chart-scroll,.home-chart-scroll,.toolbar,.bottom-nav,.overlay,.modal";
+
+    app.addEventListener("touchstart",event=>{
+        if(event.touches.length !== 1 || !event.target.closest(".page")) return;
+        if(event.target.closest(blocked)) return;
+        const touch = event.touches[0];
+        touchStart = {x:touch.clientX,y:touch.clientY};
+    },{passive:true});
+
+    app.addEventListener("touchend",event=>{
+        if(!touchStart || event.changedTouches.length !== 1) { touchStart = null; return; }
+        const touch = event.changedTouches[0];
+        const dx = touch.clientX - touchStart.x;
+        const dy = touch.clientY - touchStart.y;
+        touchStart = null;
+        if(Math.abs(dx) < 65 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+        const now = Date.now();
+        if(now - lastNavigationAt < 420) return;
+        const active = document.querySelector(".page.active");
+        const current = active ? active.id.replace("Page","") : "home";
+        const index = order.indexOf(current);
+        const next = dx < 0 ? index + 1 : index - 1;
+        if(next < 0 || next >= order.length) return;
+        lastNavigationAt = now;
+        showPage(order[next],dx < 0 ? "left" : "right");
+    },{passive:true});
+
+    app.addEventListener("touchcancel",()=>{touchStart=null;},{passive:true});
+
+    app.addEventListener("wheel",event=>{
+        if(Math.abs(event.deltaX) < 45 || Math.abs(event.deltaX) < Math.abs(event.deltaY) * 1.25) return;
+        if(event.target.closest(blocked)) return;
+        const now = Date.now();
+        if(now - lastNavigationAt < 500) return;
+        const active = document.querySelector(".page.active");
+        const current = active ? active.id.replace("Page","") : "home";
+        const index = order.indexOf(current);
+        const next = event.deltaX > 0 ? index + 1 : index - 1;
+        if(next < 0 || next >= order.length) return;
+        lastNavigationAt = now;
+        showPage(order[next],event.deltaX > 0 ? "left" : "right");
+    },{passive:true});
+})();
 
 /* =========================
    FINANCIAL GOAL + JOURNAL
@@ -5898,72 +5910,31 @@ function renderAccount(){
     );
 
 
-    const letter =
-        account.name
-            .charAt(0)
-            .toUpperCase();
+    const letter = account.name.charAt(0).toUpperCase();
+    setText("topAvatarText",letter);
+    setText("profileAvatarText",letter);
 
-
-    setText(
-        "topAvatarText",
-        letter
-    );
-
-
-    setText(
-        "profileAvatarText",
-        letter
-    );
-
+    const topAvatarText = document.getElementById("topAvatarText");
+    const topAvatarImg = document.getElementById("topAvatarImg");
+    const profileAvatarText = document.getElementById("profileAvatarText");
+    const profileAvatarImg = document.getElementById("profileAvatarImg");
 
     if(account.avatar){
-
-        document
-            .getElementById("topAvatarText")
-            .classList.add("hidden");
-
-        document
-            .getElementById("topAvatarImg")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("topAvatarImg")
-            .src =
-            account.avatar;
-
-
-        document
-            .getElementById("profileAvatarText")
-            .classList.add("hidden");
-
-        document
-            .getElementById("profileAvatarImg")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("profileAvatarImg")
-            .src =
-            account.avatar;
-
+        if(topAvatarText) topAvatarText.classList.add("hidden");
+        if(topAvatarImg){
+            topAvatarImg.classList.remove("hidden");
+            topAvatarImg.src = account.avatar;
+        }
+        if(profileAvatarText) profileAvatarText.classList.add("hidden");
+        if(profileAvatarImg){
+            profileAvatarImg.classList.remove("hidden");
+            profileAvatarImg.src = account.avatar;
+        }
     }else{
-
-        document
-            .getElementById("topAvatarText")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("topAvatarImg")
-            .classList.add("hidden");
-
-
-        document
-            .getElementById("profileAvatarText")
-            .classList.remove("hidden");
-
-        document
-            .getElementById("profileAvatarImg")
-            .classList.add("hidden");
-
+        if(topAvatarText) topAvatarText.classList.remove("hidden");
+        if(topAvatarImg) topAvatarImg.classList.add("hidden");
+        if(profileAvatarText) profileAvatarText.classList.remove("hidden");
+        if(profileAvatarImg) profileAvatarImg.classList.add("hidden");
     }
 
 }
